@@ -4,10 +4,10 @@ from engine.logger_config import setup_logger, log_execution_time
 logger = setup_logger('loader')
 
 @log_execution_time
-def trip_data():
+def trip_data(url):
     try:
-        logger.info("🚀 Loading trip data...")
-        df = pd.read_parquet("https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2025-01.parquet")
+        logger.info(f"🚀 Loading trip data from {url}...")
+        df = pd.read_parquet(url)
         logger.info(f"✅ Trip data loaded successfully: {len(df):,} records")
 
         # Rename columns for consistency in fact table

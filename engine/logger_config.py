@@ -26,9 +26,10 @@ def setup_logger(name='data_pipeline'):
         '%(levelname)s - %(funcName)s - %(message)s'
     )
     
-    # File handler - rotating log files
-    timestamp = datetime.now().strftime("%Y%m%d")
-    file_handler = logging.FileHandler(f'logs/pipeline_{timestamp}.log', encoding='utf-8')
+    # File handler - dengan timestamp + PID untuk uniqueness
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    pid = os.getpid()
+    file_handler = logging.FileHandler(f'logs/pipeline_{timestamp}_{pid}.log', encoding='utf-8')
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(file_formatter)
     

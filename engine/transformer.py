@@ -1,7 +1,19 @@
+import os
+import pandas as pd
 import holidays
 from engine.logger_config import setup_logger, log_execution_time
 
 logger = setup_logger('transformer')
+
+def get_last_key_from_file(file_path, key_column):
+    """Ambil key terakhir dari file yang sudah ada"""
+    try:
+        if os.path.exists(file_path):
+            df_key = pd.read_parquet(file_path) if file_path.endswith('.parquet') else pd.read_csv(file_path)
+            return df_key[key_column].max() if not df_key.empty else 0
+        return 0
+    except Exception:
+        return 0
 
 # Creating Vendor Dimension
 @log_execution_time
@@ -46,10 +58,14 @@ def is_holiday(date):
 
 # Creating Datetime Dimension
 @log_execution_time
-def datetime_creation(df):
+def datetime_creation(df, base_dir = 'data'):
     logger.info("Creating Datetime Dimension...")
     datetime_dim = df[['pickup_datetime', 'dropoff_datetime']].copy()
-    datetime_dim['datetime_key'] = range(1, len(datetime_dim) + 1)
+    # Get last key from existing datetime dimension file
+    datetime_file = os.path.join(base_dir, 'parquet', 'star_schema', 'datetime_dim.parquet')
+    last_datetime_key = get_last_key_from_file(datetime_file, 'datetime_key')
+    # Apply last key to new datetime dimension and continue datetime creation
+    datetime_dim['datetime_key'] = range(last_datetime_key + 1, last_datetime_key + len(datetime_dim) + 1)
     datetime_dim['pickup_hour'] = datetime_dim['pickup_datetime'].dt.hour
     datetime_dim['pickup_day'] = datetime_dim['pickup_datetime'].dt.day
     datetime_dim['pickup_weekday'] = datetime_dim['pickup_datetime'].dt.weekday
@@ -67,12 +83,16 @@ def distance_category(distance):
 
 # Creating Distance Dimension
 @log_execution_time
-def distance_creation(df):
+def distance_creation(df, base_dir = 'data'):
     logger.info("Creating Distance Dimension...")
     distance_dim = df[['trip_distance']].copy()
     distance_dim['distance_category'] = distance_dim['trip_distance'].apply(distance_category)
     distance_dim = distance_dim.drop_duplicates().reset_index(drop=True)
-    distance_dim['distance_key'] = range(1, len(distance_dim) + 1)
+    # Get last key from existing distance dimension file
+    distance_file = os.path.join(base_dir, 'parquet', 'star_schema', 'distance_dim.parquet')
+    last_distance_key = get_last_key_from_file(distance_file, 'distance_key')
+    # Apply last key to new distance dimension and continue distance creation
+    distance_dim['distance_key'] = range(last_distance_key + 1, last_distance_key + len(distance_dim) + 1)
     distance_dim = distance_dim[['distance_key', 'trip_distance', 'distance_category']]
     logger.info("Distance Dimension created successfully ✅")
     logger.info(distance_dim.info())
@@ -90,12 +110,17 @@ def location_creation(location_dim):
 
 # Creating Fact Table
 @log_execution_time
-def trip_fact_creation(df, datetime_dim, vendor_dim, ratecode_dim, payment_dim, distance_dim, location_dim):
+def trip_fact_creation(df, datetime_dim, vendor_dim, ratecode_dim, payment_dim, distance_dim, location_dim,
+                       base_dir = 'data'):
     logger.info("Creating Trip Fact Table...")
     trip_fact = df.copy()
-    # Creating trip_id as primary key
-    logger.info("Creating trip_id as primary key")
-    trip_fact['trip_id'] = range(1, len(trip_fact) + 1)
+    # Getting last trip_id from existing trip_fact file
+    fact_file = os.path.join(base_dir, 'parquet', 'star_schema', 'trip_fact')
+    last_trip_id = get_last_key_from_file(fact_file, 'trip_id')
+    # Apply last trip_id to new trip_fact and continue fact creation
+    logger.info(f"Trip IDs: {last_trip_id + 1} to {last_trip_id + len(trip_fact)}")
+    trip_fact['trip_id'] = range(last_trip_id + 1, last_trip_id + len(trip_fact) + 1)
+    logger.info("Trip ID assignment completed")
     logger.info("Creating datetime_key for fact table")
     trip_fact['datetime_key'] = datetime_dim['datetime_key']
 
