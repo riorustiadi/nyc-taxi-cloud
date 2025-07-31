@@ -12,11 +12,11 @@ RUN apt-get update && apt-get install -y \
 # Copy requirements first for better Docker layer caching
 COPY requirements.txt .
 
-# Install Python dependencies (production + testing)
+# Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copy the entire project including tests
+# Copy the entire project
 COPY . .
 
 # Create directories for data and logs (will be mounted as volumes)
@@ -35,9 +35,9 @@ RUN groupadd -g ${GROUP_ID} appuser && \
     chown -R appuser:appuser /app
 USER appuser
 
-# Health check that includes test validation
+# Health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=10s --retries=3 \
-    CMD python -c "import pandas, pyarrow, requests, holidays, pytest; print('All dependencies OK')" || exit 1
+    CMD python -c "import pandas, pyarrow, requests, holidays; print('All dependencies OK')" || exit 1
 
-# Default command (can be overridden for testing)
+# Default command
 CMD ["python", "main.py"]

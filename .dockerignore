@@ -22,8 +22,8 @@ envcloud/
 data/
 logs/
 
-# Keep tests/ folder - DON'T ignore tests
-# tests/  <- COMMENTED OUT to include tests
+
+ tests/
 
 # Debug files
 debug.py
