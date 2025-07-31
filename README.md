@@ -47,9 +47,6 @@ nyc-taxi-cloud/
 ### Setup Instructions
 
 1. **Clone and Navigate to Project**
-```powershell
-cd c:\Users\USER\PORTO\nyc-taxi-cloud
-```
 
 2. **Create and Activate Virtual Environment**
 ```powershell

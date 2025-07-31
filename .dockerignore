@@ -1,0 +1,52 @@
+# Git
+.git
+.gitignore
+README.md
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+envcloud/
+
+# IDE
+.vscode/
+.idea/
+
+# Data files (akan di-mount dari volume)
+data/
+logs/
+
+# Keep tests/ folder - DON'T ignore tests
+# tests/  <- COMMENTED OUT to include tests
+
+# Debug files
+debug.py
+
+# Documentation
+*.md
+docs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.log
+
+# pytest cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Docker files (no need to copy into image)
+docker-compose.yml
+docker-compose.override.yml
+Dockerfile
+.dockerignore

@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  nyc-taxi-pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nyc-taxi-cloud
+    restart: unless-stopped
+    
+    # Persistent storage
+    volumes:
+      # Mount data directory for CSV and Parquet files
+      - /home/riorustiadi/docker/volumes/nyc-taxi-cloud/data:/app/data
+      # Mount logs directory for log files
+      - /home/riorustiadi/docker/volumes/nyc-taxi-cloud/logs:/app/logs
+    
+    # Environment variables
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - TZ=UTC
+    
+    # Resource limits for production
+    # deploy:
+    #   resources:
+    #     limits:
+    #       memory: 2G
+    #       cpus: '1.0'
+    #     reservations:
+    #       memory: 512M
+    #       cpus: '0.5'
+    
+    # Network configuration
+    networks:
+      - nyc-taxi-network
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "python", "-c", "import pandas, pyarrow, requests, holidays, pytest; print('OK')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Testing service for running tests on demand
+  nyc-taxi-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nyc-taxi-tests
+    profiles: ["testing"]  # Only start when explicitly requested
+    
+    volumes:
+      - /home/riorustiadi/docker/volumes/nyc-taxi-cloud/data:/app/data
+      - /home/riorustiadi/docker/volumes/nyc-taxi-cloud/logs:/app/logs
+    
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+    
+    # Override command for testing
+    command: ["pytest", "tests/", "-v", "--tb=short"]
+    
+    networks:
+      - nyc-taxi-network
+
+networks:
+  nyc-taxi-network:
+    driver: bridge
